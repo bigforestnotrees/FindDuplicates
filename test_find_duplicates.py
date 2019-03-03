@@ -13,13 +13,13 @@ class TestFindDuplicates:
         assert 1 == len(found.duplicates)
 
     def test_hardlinks(self, found):
-        assert 1 == len(found.hard_links)
+        assert 0 == len(found.hard_links)
 
     def test_zerobytes(self, found):
         assert 0 == len(found.zero_bytes)
 
     def test_reset(self, found):
-        assert 1 == len(found.hard_links)
+        assert 0 == len(found.hard_links)
         found.reset()
         found.find_all()
-        assert 1 == len(found.hard_links)
+        assert 0 == len(found.hard_links)
