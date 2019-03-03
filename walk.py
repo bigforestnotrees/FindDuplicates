@@ -22,7 +22,9 @@ def list_files(full_directory_path):
     try:
         with os.scandir(full_directory_path) as directory:
             for entity in directory:
-                if entity.is_file(follow_symlinks=False) and stat.S_ISREG(entity.stat(follow_symlinks=False).st_mode):
+                if entity.is_file(follow_symlinks=False) \
+                   and stat \
+                        .S_ISREG(entity.stat(follow_symlinks=False).st_mode):
                     files.append(entity.path)
             directory.close()
     except FileNotFoundError:

@@ -48,24 +48,48 @@ class FindDuplicates:
             if size == 0:
                 self.zero_bytes = list(self.all_files[size].filenames)
             # if there was more than one file with the same size
-            elif len(self.all_files[size]) > 2:
+            elif len(self.all_files[size]) >= 2:
                 # Deal with hardlinks
                 # inodes is an iterator filled with tuples containing
                 # the inodes of 2 files of the same size. Combinations
                 # divides all of the inodes into groups of 2 for every
                 # possible combination of inode without repetition
-                inodes = itertools.combinations(self.all_files[size].inodes, 2)
+                inodes = \
+                    itertools.combinations(self.all_files[size].inodes, 2)
                 # hardlinks is a list of indexes for files that have
                 # been determined to be hardlinks.
-                hardlinks = [self.all_files[size].inodes.index(inode[0]) for inode in inodes if comparefile.inode_cmp(*inode)]
-                self.hard_links.append(list(hardlinks))
-                if len(hardlinks) > 1:
-                    for hardlink_index in hardlinks[1:]:
-                        # changes the compare flag in each subsequent hard link
-                        # from the first.
+                hardlinks = []
+                for inodepair in inodes:
+                    if comparefile.inode_cmp(*inodepair):
+                        num = inodepair[0]
+                        first = self.all_files[size].inodes.index(num)
+                        second = \
+                            self.all_files[size].inodes.index(num, first + 1)
+                        hardlinks.append(second)
+
+                for index in hardlinks:
+                    hl = str(self.all_files[size].filenames[index])
+                    self.hard_links.append(hl)
+
+                # if there are hard links
+                if len(hardlinks) > 0:
+                    for hardlink_index in hardlinks:
+                        # change the compare flag in each subsequent hard link
+                        # from the first to False.
                         self.all_files[size].compares[hardlink_index] = False
+
                 # Deal with files
-                self.duplicates.extend([(x, y) for x, y in zip(self.all_files[size].filenames[:-1], self.all_files[size].filenames[1:]) if comparefile.cmp(x, y)])
+                samesizedfiles = self.all_files[size]
+                for i in range(len(samesizedfiles.filenames)-1):
+                    if samesizedfiles.compares[i] is True \
+                       and samesizedfiles.compares[i+1] is True:
+                        if comparefile\
+                            .cmp(samesizedfiles.filenames[i],
+                                 samesizedfiles.filenames[i + 1]):
+                            self.duplicates \
+                                .append((samesizedfiles.filenames[i],
+                                         samesizedfiles.filenames[i + 1]))
+
         return self
 
     def reset(self):
